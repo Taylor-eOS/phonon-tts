@@ -15,8 +15,9 @@ QUANT = ""
 SAMPLE_RATE = 24000
 OUTPUT_DIR = os.path.dirname(os.path.abspath(__file__))
 INPUT_FILE = os.path.join(OUTPUT_DIR, "input.txt")
-OUTPUT_FILE = os.path.join(OUTPUT_DIR, "output.wav")
-MP3_FILE = os.path.join(OUTPUT_DIR, "output.mp3")
+OUTPUT_BASE = "output"
+OUTPUT_FILE = os.path.join(OUTPUT_DIR, OUTPUT_BASE + ".wav")
+MP3_FILE = os.path.join(OUTPUT_DIR, OUTPUT_BASE + ".mp3")
 MP3_BITRATE = "192k"
 GAP_SECONDS = 0.4
 tts = None
@@ -46,7 +47,15 @@ def choose_voice():
 def load_sentences(path):
     with open(path, "r", encoding="utf-8") as handle:
         lines = [line.strip() for line in handle]
-    return [line for line in lines if line and not line.startswith("#")]
+    segments = [[]]
+    for line in lines:
+        if line.startswith("#"):
+            continue
+        if line:
+            segments[-1].append(line)
+        elif segments[-1]:
+            segments.append([])
+    return [segment for segment in segments if segment]
 
 def load_model():
     global tts
@@ -54,6 +63,12 @@ def load_model():
     if QUANT:
         kwargs["quant"] = QUANT
     tts = ptts.TTS(MODEL_TEMPLATE.format(lang=LANG), **kwargs)
+
+def set_output_paths(index, total):
+    global OUTPUT_FILE, MP3_FILE
+    suffix = "" if total == 1 else f"_{index:0{max(2, len(str(total)))}d}"
+    OUTPUT_FILE = os.path.join(OUTPUT_DIR, f"{OUTPUT_BASE}{suffix}.wav")
+    MP3_FILE = os.path.join(OUTPUT_DIR, f"{OUTPUT_BASE}{suffix}.mp3")
 
 def write_wav(path, samples):
     pcm = (np.clip(samples, -1.0, 1.0) * 32767).astype(np.int16)
@@ -68,7 +83,7 @@ def synthesize(text):
     samples = np.asarray(tts.synth(text, voice=VOICE), dtype=np.float32).reshape(-1)
     elapsed = time.perf_counter() - start
     duration = samples.size / SAMPLE_RATE
-    print(f"{duration:.2f} s audio in {elapsed:.3f} s {duration / elapsed:.1f}x")
+    print(f"{duration:.2f}s audio in {elapsed:.3f}s {duration / elapsed:.1f}x")
     return samples
 
 def convert_to_mp3():
@@ -79,11 +94,7 @@ def convert_to_mp3():
     os.remove(OUTPUT_FILE)
     print(f"Converted to {MP3_FILE} ({os.path.getsize(MP3_FILE) / 1024:.0f} KiB)")
 
-def main():
-    choose_language()
-    choose_voice()
-    sentences = load_sentences(INPUT_FILE)
-    load_model()
+def process_segment(sentences):
     gap = np.zeros(int(GAP_SECONDS * SAMPLE_RATE), dtype=np.float32)
     all_samples = []
     for i, text in enumerate(sentences, 1):
@@ -94,5 +105,16 @@ def main():
     print(f"Synthesized {full.size / SAMPLE_RATE:.2f} s of audio")
     convert_to_mp3()
 
+def main():
+    choose_language()
+    choose_voice()
+    segments = load_sentences(INPUT_FILE)
+    load_model()
+    for index, sentences in enumerate(segments, 1):
+        print(f"Segment {index}/{len(segments)}")
+        set_output_paths(index, len(segments))
+        process_segment(sentences)
+
 if __name__ == "__main__":
+    print("This requires exporting the Hugging Face token!")
     main()
