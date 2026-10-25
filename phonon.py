@@ -63,13 +63,6 @@ def write_wav(path, samples):
         handle.setframerate(SAMPLE_RATE)
         handle.writeframes(pcm.tobytes())
 
-def convert_to_mp3():
-    if shutil.which("ffmpeg") is None:
-        raise RuntimeError("ffmpeg not found, install it with: sudo apt install ffmpeg")
-    command = ["ffmpeg", "-y", "-loglevel", "error", "-i", OUTPUT_FILE, "-codec:a", "libmp3lame", "-b:a", MP3_BITRATE, MP3_FILE]
-    subprocess.run(command, check=True)
-    print(f"Converted to {MP3_FILE} ({os.path.getsize(MP3_FILE) / 1024:.0f} KiB)")
-
 def synthesize(text):
     start = time.perf_counter()
     samples = np.asarray(tts.synth(text, voice=VOICE), dtype=np.float32).reshape(-1)
@@ -77,6 +70,14 @@ def synthesize(text):
     duration = samples.size / SAMPLE_RATE
     print(f"{duration:.2f} s audio in {elapsed:.3f} s {duration / elapsed:.1f}x")
     return samples
+
+def convert_to_mp3():
+    if shutil.which("ffmpeg") is None:
+        raise RuntimeError("ffmpeg not found, install it with: sudo apt install ffmpeg")
+    command = ["ffmpeg", "-y", "-loglevel", "error", "-i", OUTPUT_FILE, "-codec:a", "libmp3lame", "-b:a", MP3_BITRATE, MP3_FILE]
+    subprocess.run(command, check=True)
+    os.remove(OUTPUT_FILE)
+    print(f"Converted to {MP3_FILE} ({os.path.getsize(MP3_FILE) / 1024:.0f} KiB)")
 
 def main():
     choose_language()
@@ -90,7 +91,7 @@ def main():
         all_samples.extend([synthesize(text), gap])
     full = np.concatenate(all_samples)
     write_wav(OUTPUT_FILE, full)
-    print(f"Wrote {full.size / SAMPLE_RATE:.2f} s to {OUTPUT_FILE}")
+    print(f"Synthesized {full.size / SAMPLE_RATE:.2f} s of audio")
     convert_to_mp3()
 
 if __name__ == "__main__":
