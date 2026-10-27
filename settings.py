@@ -1,16 +1,17 @@
 VOICES = {
     "de": {
-        "Male": ["Anton", "Mirko", "Mats", "Henrik", "Leon", "Mika"],
         "Female": ["Nele", "Jette", "Annika", "Jule", "Lotta", "Josefine", "Svea"],
+        "Male": ["Anton", "Mirko", "Mats", "Henrik", "Leon", "Mika"],
     },
     "en": {
-        "US Male": ["Trevor", "Russell", "Preston", "Easton", "Micah", "Miles"],
-        "US Female": ["Zoey", "Juniper", "Everly", "Harper", "Hadley", "Delia"],
-        "UK Male": ["Alfie", "Hugh", "Edwin", "Spencer", "Toby", "Teddy"],
-        "UK Female": ["Maeve", "Freya", "Pippa", "Elodie-Rose", "Imogen", "Lottie", "Bryony"],
+        "US Female": ["Harper", "Everly", "Delia", "Zoey", "Juniper", "Hadley"],
+        "US Male": ["Preston", "Russell", "Trevor", "Easton", "Micah", "Miles"],
+        "UK Female": ["Pippa", "Bryony", "Imogen", "Elodie-Rose", "Lottie", "Maeve", "Freya"],
+        "UK Male": ["Teddy", "Toby", "Spencer", "Edwin", "Hugh", "Alfie"],
     },
     "es": {
-        "Male": ["Noa", "Lucía-Sol", "Candela", "Celia", "Alba", "Alicia", "Nerea"],
         "Female": ["Marcos", "Borja", "Iker", "Nuno", "Izan", "Guillermo"],
+        "Male": ["Noa", "Lucía-Sol", "Candela", "Celia", "Alba", "Alicia", "Nerea"],
     },
 }
+OFFLINE = True
