@@ -5,6 +5,7 @@ import time
 import wave
 import numpy as np
 import ptts
+from utils import write_log
 import settings
 
 MODEL_TEMPLATE = "hf://gradium/phonon-40m-{lang}"
@@ -13,11 +14,9 @@ LANG = LANGUAGES[0]
 VOICE = ""
 QUANT = ""
 SAMPLE_RATE = 24000
-OUTPUT_DIR = os.path.dirname(os.path.abspath(__file__))
-INPUT_FILE = os.path.join(OUTPUT_DIR, "input.txt")
-OUTPUT_BASE = "output"
-OUTPUT_FILE = os.path.join(OUTPUT_DIR, OUTPUT_BASE + ".wav")
-MP3_FILE = os.path.join(OUTPUT_DIR, OUTPUT_BASE + ".mp3")
+INPUT_FILE = "input.txt"
+OUTPUT_FILE = ""
+MP3_FILE = ""
 MP3_BITRATE = "192k"
 GAP_SECONDS = 0.4
 tts = None
@@ -67,8 +66,8 @@ def load_model():
 def set_output_paths(index, total):
     global OUTPUT_FILE, MP3_FILE
     suffix = "" if total == 1 else f"_{index:0{max(2, len(str(total)))}d}"
-    OUTPUT_FILE = os.path.join(OUTPUT_DIR, f"{OUTPUT_BASE}{suffix}.wav")
-    MP3_FILE = os.path.join(OUTPUT_DIR, f"{OUTPUT_BASE}{suffix}.mp3")
+    OUTPUT_FILE = f"output{suffix}.wav"
+    MP3_FILE = f"output{suffix}.mp3"
 
 def write_wav(path, samples):
     pcm = (np.clip(samples, -1.0, 1.0) * 32767).astype(np.int16)
@@ -104,6 +103,7 @@ def process_segment(sentences):
     write_wav(OUTPUT_FILE, full)
     print(f"Synthesized {full.size / SAMPLE_RATE:.2f} s of audio")
     convert_to_mp3()
+    write_log(sentences, MP3_FILE, LANG, VOICE)
 
 def main():
     choose_language()
